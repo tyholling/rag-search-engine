@@ -4,6 +4,8 @@ import argparse
 import json
 import string
 
+from nltk.stem import PorterStemmer
+
 def main() -> None:
     remove_punctuation = str.maketrans('', '', string.punctuation)
 
@@ -14,6 +16,8 @@ def main() -> None:
     with open('data/stopwords.txt', 'r') as f:
         stop_words = f.read().splitlines()
 
+    stemmer = PorterStemmer()
+
     parser = argparse.ArgumentParser(description="Keyword Search CLI")
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
     search_parser = subparsers.add_parser("search", help="Search movies using BM25")
@@ -23,6 +27,7 @@ def main() -> None:
     query = args.query.lower().translate(remove_punctuation)
     query_tokens = [token for token in query.split() if token]
     query_tokens = [token for token in query_tokens if token not in stop_words]
+    query_tokens = [stemmer.stem(token) for token in query_tokens]
 
     match args.command:
         case "search":
