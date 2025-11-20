@@ -4,6 +4,7 @@ import argparse
 import json
 import string
 
+from inverted_index import InvertedIndex
 from nltk.stem import PorterStemmer
 
 def main() -> None:
@@ -22,15 +23,16 @@ def main() -> None:
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
     search_parser = subparsers.add_parser("search", help="Search movies using BM25")
     search_parser.add_argument("query", type=str, help="Search query")
+    subparsers.add_parser("build", help="Build search index")
 
     args = parser.parse_args()
-    query = args.query.lower().translate(remove_punctuation)
-    query_tokens = [token for token in query.split() if token]
-    query_tokens = [token for token in query_tokens if token not in stop_words]
-    query_tokens = [stemmer.stem(token) for token in query_tokens]
-
     match args.command:
         case "search":
+            query = args.query.lower().translate(remove_punctuation)
+            query_tokens = [token for token in query.split() if token]
+            query_tokens = [token for token in query_tokens if token not in stop_words]
+            query_tokens = [stemmer.stem(token) for token in query_tokens]
+
             print(f"Searching for: {args.query}")
             results = []
             for movie in movies:
@@ -42,6 +44,14 @@ def main() -> None:
             for i, title in enumerate(results[:5]):
                 print(f"{i + 1}. {title}")
             pass
+
+        case "build":
+            inverted_index = InvertedIndex()
+            inverted_index.build(movies)
+            inverted_index.save()
+            docs = inverted_index.get_documents("merida")
+            print(f"First document for token 'merida' = {docs[0]}")
+
         case _:
             parser.print_help()
 
