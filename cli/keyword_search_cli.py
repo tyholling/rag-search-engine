@@ -18,6 +18,7 @@ def main() -> None:
         stop_words = f.read().splitlines()
 
     stemmer = PorterStemmer()
+    inverted_index = InvertedIndex()
 
     parser = argparse.ArgumentParser(description="Keyword Search CLI")
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
@@ -28,6 +29,12 @@ def main() -> None:
     args = parser.parse_args()
     match args.command:
         case "search":
+            try:
+                inverted_index.load()
+            except Exception as e:
+                print(f"Error loading inverted index: {e}")
+                return
+
             query = args.query.lower().translate(remove_punctuation)
             query_tokens = [token for token in query.split() if token]
             query_tokens = [token for token in query_tokens if token not in stop_words]
@@ -35,22 +42,21 @@ def main() -> None:
 
             print(f"Searching for: {args.query}")
             results = []
-            for movie in movies:
-                movie_title = movie['title'].lower().translate(remove_punctuation)
-                for query_token in query_tokens:
-                    if query_token in movie_title:
-                        results.append(movie['title'])
-                        break
-            for i, title in enumerate(results[:5]):
-                print(f"{i + 1}. {title}")
+            for token in query_tokens:
+                token_docs = inverted_index.get_documents(token)
+                results.extend(token_docs)
+                if len(results) >= 5:
+                    break
+
+            for doc_id in results[:5]:
+                document = inverted_index.get_document(doc_id)
+                print(f"{document['id']:4}: {document['title']}")
             pass
 
         case "build":
-            inverted_index = InvertedIndex()
             inverted_index.build(movies)
             inverted_index.save()
-            docs = inverted_index.get_documents("merida")
-            print(f"First document for token 'merida' = {docs[0]}")
+            pass
 
         case _:
             parser.print_help()
