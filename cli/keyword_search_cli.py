@@ -8,8 +8,11 @@ def main() -> None:
     remove_punctuation = str.maketrans('', '', string.punctuation)
 
     with open('data/movies.json', 'r') as f:
-        data = json.load(f)
-    movies = sorted(data['movies'], key=lambda x: x['id'])
+        movies_data = json.load(f)
+    movies = sorted(movies_data['movies'], key=lambda x: x['id'])
+
+    with open('data/stopwords.txt', 'r') as f:
+        stop_words = f.read().splitlines()
 
     parser = argparse.ArgumentParser(description="Keyword Search CLI")
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
@@ -19,17 +22,18 @@ def main() -> None:
     args = parser.parse_args()
     query = args.query.lower().translate(remove_punctuation)
     query_tokens = [token for token in query.split() if token]
+    query_tokens = [token for token in query_tokens if token not in stop_words]
 
     match args.command:
         case "search":
             print(f"Searching for: {args.query}")
             results = []
             for movie in movies:
-                m = movie.copy()
-                m['title'] = m['title'].lower().translate(remove_punctuation)
+                movie_title = movie['title'].lower().translate(remove_punctuation)
                 for query_token in query_tokens:
-                    if query_token in m['title']:
+                    if query_token in movie_title:
                         results.append(movie['title'])
+                        break
             for i, title in enumerate(results[:5]):
                 print(f"{i + 1}. {title}")
             pass
