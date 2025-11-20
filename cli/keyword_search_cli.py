@@ -2,6 +2,7 @@
 
 import argparse
 import json
+import string
 
 def main() -> None:
     with open('data/movies.json', 'r') as f:
@@ -14,11 +15,14 @@ def main() -> None:
     search_parser.add_argument("query", type=str, help="Search query")
 
     args = parser.parse_args()
+    remove_punctuation = str.maketrans('', '', string.punctuation)
+    query = args.query.lower().translate(remove_punctuation)
     match args.command:
         case "search":
             print(f"Searching for: {args.query}")
             results = list(movie['title']
-                           for movie in movies if args.query.lower() in movie['title'].lower())
+                           for movie in movies
+                           if query in movie['title'].lower().translate(remove_punctuation))
             for i, title in enumerate(results[:5]):
                 print(f"{i + 1}. {title}")
             pass
