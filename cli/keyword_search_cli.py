@@ -17,7 +17,8 @@ def main() -> None:
     match args.command:
         case "search":
             print(f"Searching for: {args.query}")
-            results = list(movie['title'] for movie in movies if args.query in movie['title'])
+            results = list(movie['title']
+                           for movie in movies if args.query.lower() in movie['title'].lower())
             for i, title in enumerate(results[:5]):
                 print(f"{i + 1}. {title}")
             pass
