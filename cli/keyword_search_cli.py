@@ -5,6 +5,8 @@ import json
 import string
 
 def main() -> None:
+    remove_punctuation = str.maketrans('', '', string.punctuation)
+
     with open('data/movies.json', 'r') as f:
         data = json.load(f)
     movies = sorted(data['movies'], key=lambda x: x['id'])
@@ -15,14 +17,19 @@ def main() -> None:
     search_parser.add_argument("query", type=str, help="Search query")
 
     args = parser.parse_args()
-    remove_punctuation = str.maketrans('', '', string.punctuation)
     query = args.query.lower().translate(remove_punctuation)
+    query_tokens = [token for token in query.split() if token]
+
     match args.command:
         case "search":
             print(f"Searching for: {args.query}")
-            results = list(movie['title']
-                           for movie in movies
-                           if query in movie['title'].lower().translate(remove_punctuation))
+            results = []
+            for movie in movies:
+                m = movie.copy()
+                m['title'] = m['title'].lower().translate(remove_punctuation)
+                for query_token in query_tokens:
+                    if query_token in m['title']:
+                        results.append(movie['title'])
             for i, title in enumerate(results[:5]):
                 print(f"{i + 1}. {title}")
             pass
