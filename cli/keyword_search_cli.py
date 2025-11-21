@@ -5,7 +5,7 @@ import json
 import math
 import string
 
-from inverted_index import InvertedIndex, BM25_K1, BM25_B
+from inverted_index import InvertedIndex, BM25_K1, BM25_B, tokenize
 from nltk.stem import PorterStemmer
 
 def main() -> None:
@@ -18,7 +18,6 @@ def main() -> None:
 
     stemmer = PorterStemmer()
     inverted_index = InvertedIndex()
-    remove_punctuation = str.maketrans('', '', string.punctuation)
 
     parser = argparse.ArgumentParser(description="Keyword Search CLI")
     subparsers = parser.add_subparsers(dest="command", help="available commands")
@@ -57,10 +56,7 @@ def main() -> None:
                 print(f"Error loading inverted index: {e}")
                 return
 
-            query = args.query.lower().translate(remove_punctuation)
-            query_tokens = [token for token in query.split() if token]
-            query_tokens = [token for token in query_tokens if token not in stop_words]
-            query_tokens = [stemmer.stem(token) for token in query_tokens]
+            query_tokens = tokenize(args.query)
 
             print(f"Searching for: {args.query}")
             results = []
