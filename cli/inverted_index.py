@@ -19,7 +19,11 @@ class InvertedIndex:
         stemmer = PorterStemmer()
         remove_punctuation = str.maketrans('', '', string.punctuation)
         tokens = text.lower().translate(remove_punctuation).split()
-        tokens = [stemmer.stem(token) for token in tokens]
+        tokens_set = set()
+        for token in tokens:
+            tokens_set.add(token)
+            tokens_set.add(stemmer.stem(token))
+        tokens = list(tokens_set)
         self.term_frequencies[doc_id] = Counter(tokens)
 
         for token in tokens:
@@ -45,6 +49,17 @@ class InvertedIndex:
         if int(doc_id) not in self.term_frequencies:
             return 0
         return self.term_frequencies[int(doc_id)][token]
+
+    def get_idf(self, term):
+        tokens = term.split()
+        if len(tokens) != 1:
+            raise Exception("expected one token")
+        token = tokens[0]
+        # how many documents total
+        doc_count = len(self.docmap)
+        # how many documents contain a term
+        term_doc_count = len(list(self.index[token])) if token in self.index else 0
+        return doc_count, term_doc_count
 
     def build(self, movies):
         for movie in movies:
