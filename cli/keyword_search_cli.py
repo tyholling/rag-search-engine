@@ -34,6 +34,8 @@ def main() -> None:
     tfidf_parser = subparsers.add_parser("tfidf", help="calculate tf-idf")
     tfidf_parser.add_argument("doc_id", help="document id")
     tfidf_parser.add_argument("term", help="term to analyze for a document")
+    bm25_idf_parser = subparsers.add_parser("bm25idf", help="Get BM25 IDF score for a given term")
+    bm25_idf_parser.add_argument("term", type=str, help="Term to get BM25 IDF score for")
 
     args = parser.parse_args()
     match args.command:
@@ -84,6 +86,10 @@ def main() -> None:
             idf = math.log((doc_count + 1) / (term_doc_count + 1))
             print(f"Inverse document frequency of '{args.term}': {idf:.2f}")
 
+        case "bm25idf":
+            bm25_idf = bm25_idf_command(args.term)
+            print(f"BM25 IDF score of '{args.term}': {bm25_idf:.2f}")
+
         case "tfidf":
             try:
                 inverted_index.load()
@@ -112,6 +118,16 @@ def main() -> None:
 
         case _:
             parser.print_help()
+
+def bm25_idf_command(term: str) -> float:
+    try:
+        inverted_index = InvertedIndex()
+        inverted_index.load()
+    except Exception as e:
+        print(f"Error loading inverted index: {e}")
+        return 0
+
+    return inverted_index.get_bm25_idf(term)
 
 if __name__ == "__main__":
     main()

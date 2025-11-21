@@ -1,4 +1,5 @@
 import os
+import math
 import pickle
 import string
 
@@ -66,6 +67,18 @@ class InvertedIndex:
         # how many documents contain a term
         term_doc_count = len(list(self.index[token])) if token in self.index else 0
         return doc_count, term_doc_count
+
+    def get_bm25_idf(self, term) -> float:
+        stemmer = PorterStemmer()
+        remove_punctuation = str.maketrans('', '', string.punctuation)
+        tokens = term.lower().translate(remove_punctuation).split()
+        if len(tokens) != 1:
+            raise Exception("expected one token")
+        token = stemmer.stem(tokens[0])
+
+        n = len(self.docmap)
+        df = len(list(self.index[token])) if token in self.index else 0
+        return math.log((n - df + 0.5) / (df + 0.5) + 1)
 
     def build(self, movies):
         for movie in movies:
