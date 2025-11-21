@@ -9,8 +9,6 @@ from inverted_index import InvertedIndex, BM25_K1, BM25_B
 from nltk.stem import PorterStemmer
 
 def main() -> None:
-    remove_punctuation = str.maketrans('', '', string.punctuation)
-
     with open('data/movies.json', 'r') as f:
         movies_data = json.load(f)
     movies = sorted(movies_data['movies'], key=lambda x: x['id'])
@@ -20,6 +18,7 @@ def main() -> None:
 
     stemmer = PorterStemmer()
     inverted_index = InvertedIndex()
+    remove_punctuation = str.maketrans('', '', string.punctuation)
 
     parser = argparse.ArgumentParser(description="Keyword Search CLI")
     subparsers = parser.add_subparsers(dest="command", help="available commands")
@@ -44,6 +43,10 @@ def main() -> None:
         "k1", type=float, nargs='?', default=BM25_K1, help="Tunable BM25 K1 parameter")
     bm25_tf_parser.add_argument(
         "b", type=float, nargs='?', default=BM25_B, help="Tunable BM25 b parameter")
+    bm25search_parser = subparsers.add_parser("bm25search", help="search movies using bm25 scores")
+    bm25search_parser.add_argument("query", help="search query")
+    bm25search_parser.add_argument(
+        "--limit", type=int, default=5, help="limit the number of results")
 
     args = parser.parse_args()
     match args.command:
@@ -102,6 +105,12 @@ def main() -> None:
             bm25_tf = bm25_tf_command(args.doc_id, args.term, args.k1, args.b)
             print(f"BM25 TF score of '{args.term}' in document '{args.doc_id}': {bm25_tf:.2f}")
 
+        case "bm25search":
+            results = bm25_search_command(args.query, args.limit)
+            for i, result in enumerate(results):
+                doc_id, title, score = result
+                print(f"{i}. ({doc_id:4}) {title} - Score: {score:.2f}")
+
         case "tfidf":
             try:
                 inverted_index.load()
@@ -131,7 +140,7 @@ def main() -> None:
         case _:
             parser.print_help()
 
-def bm25_idf_command(term: str) -> float:
+def bm25_idf_command(term):
     try:
         inverted_index = InvertedIndex()
         inverted_index.load()
@@ -150,6 +159,16 @@ def bm25_tf_command(doc_id, term, k1=BM25_K1, b=BM25_B):
         return 0
 
     return inverted_index.get_bm25_tf(doc_id, term, k1, b)
+
+def bm25_search_command(query, limit):
+    try:
+        inverted_index = InvertedIndex()
+        inverted_index.load()
+    except Exception as e:
+        print(f"Error loading inverted index: {e}")
+        return []
+
+    return inverted_index.bm25_search(query, limit)
 
 if __name__ == "__main__":
     main()
