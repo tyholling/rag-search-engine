@@ -7,6 +7,7 @@ from collections import Counter
 from nltk.stem import PorterStemmer
 
 BM25_K1 = 1.5
+BM25_B = 0.75
 
 class InvertedIndex:
 
@@ -15,13 +16,21 @@ class InvertedIndex:
         self.index = {}
         # dictionary mapping document ids to document objects
         self.docmap = {}
-        # dictionary mapping documents ids to counter objects
+        # dictionary mapping document ids to counter objects
         self.term_frequencies = {}
+        # dictionary mapping document ids to lengths
+        self.doc_lengths = {}
+
+    def __get_avg_doc_length(self) -> float:
+        total = sum(self.doc_lengths.values())
+        n = len(self.docmap)
+        return total / n if n > 0 else 0
 
     def __add_document(self, doc_id, text):
         stemmer = PorterStemmer()
         remove_punctuation = str.maketrans('', '', string.punctuation)
         tokens = text.lower().translate(remove_punctuation).split()
+        self.doc_lengths[doc_id] = len(tokens)
 
         if doc_id not in self.term_frequencies:
             self.term_frequencies[doc_id] = Counter()
@@ -82,9 +91,13 @@ class InvertedIndex:
         df = len(list(self.index[token])) if token in self.index else 0
         return math.log((n - df + 0.5) / (df + 0.5) + 1)
 
-    def get_bm25_tf(self, doc_id, term, k1 = BM25_K1):
+    def get_bm25_tf(self, doc_id, term, k1=BM25_K1, b=BM25_B):
+        doc_length = self.doc_lengths[doc_id]
+        avg_doc_length = self.__get_avg_doc_length()
+        # Length normalization factor
+        length_norm = 1 - b + b * (doc_length / avg_doc_length)
         tf = self.get_tf(doc_id, term)
-        return (tf * (k1 + 1)) / (tf + k1)
+        return (tf * (k1 + 1)) / (tf + k1 * length_norm)
 
     def build(self, movies):
         for movie in movies:
@@ -101,6 +114,8 @@ class InvertedIndex:
             pickle.dump(self.docmap, f)
         with open('cache/term_frequencies.pkl', 'wb') as f:
             pickle.dump(self.term_frequencies, f)
+        with open('cache/doc_lengths.pkl', 'wb') as f:
+            pickle.dump(self.doc_lengths, f)
 
     def load(self):
         if not os.path.exists('cache'):
@@ -111,6 +126,8 @@ class InvertedIndex:
             raise FileNotFoundError("Docmap file does not exist")
         if not os.path.exists('cache/term_frequencies.pkl'):
             raise FileNotFoundError("Term frequencies file does not exist")
+        if not os.path.exists('cache/doc_lengths.pkl'):
+            raise FileNotFoundError("Doc lengths does not exist")
 
         with open('cache/index.pkl', 'rb') as f:
             self.index = pickle.load(f)
@@ -118,3 +135,5 @@ class InvertedIndex:
             self.docmap = pickle.load(f)
         with open('cache/term_frequencies.pkl', 'rb') as f:
             self.term_frequencies = pickle.load(f)
+        with open('cache/doc_lengths.pkl', 'rb') as f:
+            self.doc_lengths = pickle.load(f)

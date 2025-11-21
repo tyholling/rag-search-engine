@@ -5,7 +5,7 @@ import json
 import math
 import string
 
-from inverted_index import InvertedIndex, BM25_K1
+from inverted_index import InvertedIndex, BM25_K1, BM25_B
 from nltk.stem import PorterStemmer
 
 def main() -> None:
@@ -42,6 +42,8 @@ def main() -> None:
     bm25_tf_parser.add_argument("term", type=str, help="Term to get BM25 TF score for")
     bm25_tf_parser.add_argument(
         "k1", type=float, nargs='?', default=BM25_K1, help="Tunable BM25 K1 parameter")
+    bm25_tf_parser.add_argument(
+        "b", type=float, nargs='?', default=BM25_B, help="Tunable BM25 b parameter")
 
     args = parser.parse_args()
     match args.command:
@@ -97,7 +99,7 @@ def main() -> None:
             print(f"BM25 IDF score of '{args.term}': {bm25_idf:.2f}")
 
         case "bm25tf":
-            bm25_tf = bm25_tf_command(args.doc_id, args.term, args.k1)
+            bm25_tf = bm25_tf_command(args.doc_id, args.term, args.k1, args.b)
             print(f"BM25 TF score of '{args.term}' in document '{args.doc_id}': {bm25_tf:.2f}")
 
         case "tfidf":
@@ -139,7 +141,7 @@ def bm25_idf_command(term: str) -> float:
 
     return inverted_index.get_bm25_idf(term)
 
-def bm25_tf_command(doc_id, term, k1=BM25_K1):
+def bm25_tf_command(doc_id, term, k1=BM25_K1, b=BM25_B):
     try:
         inverted_index = InvertedIndex()
         inverted_index.load()
@@ -147,7 +149,7 @@ def bm25_tf_command(doc_id, term, k1=BM25_K1):
         print(f"Error loading inverted index: {e}")
         return 0
 
-    return inverted_index.get_bm25_tf(doc_id, term, k1)
+    return inverted_index.get_bm25_tf(doc_id, term, k1, b)
 
 if __name__ == "__main__":
     main()
