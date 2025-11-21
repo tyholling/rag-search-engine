@@ -22,15 +22,18 @@ def main() -> None:
     inverted_index = InvertedIndex()
 
     parser = argparse.ArgumentParser(description="Keyword Search CLI")
-    subparsers = parser.add_subparsers(dest="command", help="Available commands")
-    search_parser = subparsers.add_parser("search", help="Search movies using BM25")
-    search_parser.add_argument("query", type=str, help="Search query")
-    subparsers.add_parser("build", help="Build search index")
-    tf_parser = subparsers.add_parser("tf", help="Get term frequency")
-    tf_parser.add_argument("document", help="document id")
+    subparsers = parser.add_subparsers(dest="command", help="available commands")
+    search_parser = subparsers.add_parser("search", help="search movies")
+    search_parser.add_argument("query", type=str, help="search query")
+    subparsers.add_parser("build", help="build search index")
+    tf_parser = subparsers.add_parser("tf", help="term frequency")
+    tf_parser.add_argument("doc_id", help="document id")
     tf_parser.add_argument("term", help="term to count in a document")
     idf_parser = subparsers.add_parser("idf", help="inverse document frequency")
     idf_parser.add_argument("term", help="term to count in all documents")
+    tfidf_parser = subparsers.add_parser("tfidf", help="calculate tf-idf")
+    tfidf_parser.add_argument("doc_id", help="document id")
+    tfidf_parser.add_argument("term", help="term to analyze for a document")
 
     args = parser.parse_args()
     match args.command:
@@ -66,10 +69,9 @@ def main() -> None:
                 return
 
             try:
-                print(inverted_index.get_tf(args.document, args.term))
+                print(inverted_index.get_tf(args.doc_id, args.term))
             except Exception as e:
                 print(e)
-                return
 
         case "idf":
             try:
@@ -81,6 +83,28 @@ def main() -> None:
             doc_count, term_doc_count = inverted_index.get_idf(args.term)
             idf = math.log((doc_count + 1) / (term_doc_count + 1))
             print(f"Inverse document frequency of '{args.term}': {idf:.2f}")
+
+        case "tfidf":
+            try:
+                inverted_index.load()
+            except Exception as e:
+                print(f"Error loading inverted index: {e}")
+                return
+
+            try:
+                stemmer = PorterStemmer()
+                tokens = args.term.lower().split()
+                if len(tokens) != 1:
+                    raise Exception("expected one token")
+                token = stemmer.stem(tokens[0])
+
+                tf = inverted_index.get_tf(args.doc_id, token)
+                doc_count, term_doc_count = inverted_index.get_idf(token)
+                idf = math.log((doc_count + 1) / (term_doc_count + 1))
+                tf_idf = tf * idf
+                print(f"TF-IDF score of '{args.term}' in document '{args.doc_id}': {tf_idf:.2f}")
+            except Exception as e:
+                print(e)
 
         case "build":
             inverted_index.build(movies)

@@ -19,17 +19,18 @@ class InvertedIndex:
         stemmer = PorterStemmer()
         remove_punctuation = str.maketrans('', '', string.punctuation)
         tokens = text.lower().translate(remove_punctuation).split()
-        tokens_set = set()
-        for token in tokens:
-            tokens_set.add(token)
-            tokens_set.add(stemmer.stem(token))
-        tokens = list(tokens_set)
-        self.term_frequencies[doc_id] = Counter(tokens)
+
+        if doc_id not in self.term_frequencies:
+            self.term_frequencies[doc_id] = Counter()
 
         for token in tokens:
-            if token not in self.index:
-                self.index[token] = set()
-            self.index[token].add(doc_id)
+            stem = stemmer.stem(token)
+
+            if stem not in self.index:
+                self.index[stem] = set()
+            self.index[stem].add(doc_id)
+
+            self.term_frequencies[doc_id][stem] += 1
 
     def get_documents(self, term):
         term = term.lower()
@@ -41,20 +42,25 @@ class InvertedIndex:
         return self.docmap[doc_id]
 
     def get_tf(self, doc_id, term):
-        tokens = term.split()
+        stemmer = PorterStemmer()
+        remove_punctuation = str.maketrans('', '', string.punctuation)
+        tokens = term.lower().translate(remove_punctuation).split()
         if len(tokens) != 1:
             raise Exception("expected one token")
-        token = tokens[0]
+        token = stemmer.stem(tokens[0])
 
         if int(doc_id) not in self.term_frequencies:
             return 0
         return self.term_frequencies[int(doc_id)][token]
 
     def get_idf(self, term):
-        tokens = term.split()
+        stemmer = PorterStemmer()
+        remove_punctuation = str.maketrans('', '', string.punctuation)
+        tokens = term.lower().translate(remove_punctuation).split()
         if len(tokens) != 1:
             raise Exception("expected one token")
-        token = tokens[0]
+        token = stemmer.stem(tokens[0])
+
         # how many documents total
         doc_count = len(self.docmap)
         # how many documents contain a term
@@ -63,7 +69,7 @@ class InvertedIndex:
 
     def build(self, movies):
         for movie in movies:
-            doc_id = movie['id']
+            doc_id = int(movie['id'])
             text = f"{movie['title']} {movie['description']}"
             self.__add_document(doc_id, text)
             self.docmap[doc_id] = movie
