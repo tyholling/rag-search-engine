@@ -124,3 +124,14 @@ def search_command(query, limit):
     for i in range(len(results)):
         score, title, description = results[i]
         print(f"{i+1}. {title} (score: {score:.4f})\n{description}\n")
+
+def chunk_command(query, chunk_size):
+    print(f"Chunking {len(query)} characters")
+    words = query.split()
+    lines = []
+    while words:
+        chunk = words[:chunk_size]
+        words = words[chunk_size:]
+        lines.append(" ".join(chunk))
+    for i, line in enumerate(lines):
+        print(f"{i+1}. {line}")
