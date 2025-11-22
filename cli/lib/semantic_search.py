@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 
 import json
-import os
-from sentence_transformers import SentenceTransformer
 import numpy as np
+import os
+import re
+
+from sentence_transformers import SentenceTransformer
 
 class SemanticSearch:
 
@@ -137,3 +139,16 @@ def chunk_command(query, chunk_size, overlap):
         lines.append(" ".join(chunk))
     for i, line in enumerate(lines):
         print(f"{i+1}. {line}")
+
+def semantic_chunk_command(query, max_chunk_size, overlap):
+    print(f"Semantically chunking {len(query)} characters")
+    lines = re.split(r"(?<=[.!?])\s+", query)
+    chunks = []
+    while lines:
+        if chunks and len(lines) <= overlap:
+            break
+        next = lines[:max_chunk_size]
+        lines = lines[max_chunk_size - overlap:]
+        chunks.append(" ".join(next))
+    for i, chunk in enumerate(chunks):
+        print(f"{i+1}. {chunk}")
