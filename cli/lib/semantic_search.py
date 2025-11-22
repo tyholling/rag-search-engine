@@ -125,13 +125,15 @@ def search_command(query, limit):
         score, title, description = results[i]
         print(f"{i+1}. {title} (score: {score:.4f})\n{description}\n")
 
-def chunk_command(query, chunk_size):
+def chunk_command(query, chunk_size, overlap):
     print(f"Chunking {len(query)} characters")
     words = query.split()
     lines = []
     while words:
+        if lines and len(words) <= overlap:
+            break
         chunk = words[:chunk_size]
-        words = words[chunk_size:]
+        words = words[chunk_size - overlap:]
         lines.append(" ".join(chunk))
     for i, line in enumerate(lines):
         print(f"{i+1}. {line}")
