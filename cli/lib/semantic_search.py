@@ -14,11 +14,10 @@ class SemanticSearch:
         self.document_map = {}
 
     def generate_embedding(self, text: str):
-        if not len(text) == 0 or not text.strip():
+        if len(text) == 0 or not text.strip():
             raise ValueError("Input text is empty or contains only whitespace.")
 
-        embeddings = self.model.encode(sentences=text)
-        return embeddings[0]
+        return self.model.encode(sentences=text)
 
     def build_embeddings(self, documents: list[dict]):
         self.documents = documents
@@ -75,3 +74,10 @@ def verify_embeddings():
     embeddings = search.load_or_create_embeddings(movies)
     print(f"Number of docs:   {len(movies)}")
     print(f"Embeddings shape: {embeddings.shape[0]} vectors in {embeddings.shape[1]} dimensions")
+
+def embed_query_text(query: str):
+    search = SemanticSearch()
+    embedding = search.generate_embedding(query)
+    print(f"Query: {query}")
+    print(f"First 5 dimensions: {embedding[:5]}")
+    print(f"Shape: {embedding.shape}")
