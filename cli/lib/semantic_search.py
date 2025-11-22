@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 
 import json
-import numpy as np
 import os
 import re
 
-from sentence_transformers import SentenceTransformer
+import numpy
+import sentence_transformers
 
 class SemanticSearch:
 
     def __init__(self, model_name: str = "all-MiniLM-L6-v2"):
-        self.model = SentenceTransformer(model_name)
+        self.model = sentence_transformers.SentenceTransformer(model_name)
         self.embeddings = None
         self.documents = None
         self.document_map = {}
@@ -30,7 +30,7 @@ class SemanticSearch:
             doc_strings.append(f"{document['title']}: {document['description']}")
         self.embeddings = self.model.encode(doc_strings)
 
-        np.save(file='cache/movie_embeddings.npy', arr=self.embeddings)
+        numpy.save(file='cache/movie_embeddings.npy', arr=self.embeddings)
         return self.embeddings
 
     def load_or_create_embeddings(self, documents: list[dict]):
@@ -42,7 +42,7 @@ class SemanticSearch:
 
         if os.path.exists('cache/movie_embeddings.npy'):
             with open('cache/movie_embeddings.npy', 'rb') as f:
-                self.embeddings = np.load(f)
+                self.embeddings = numpy.load(f)
 
         if self.embeddings is not None and len(self.embeddings) == len(documents):
             return self.embeddings
@@ -104,9 +104,9 @@ def embed_query_text(query: str):
     print(f"Shape: {embedding.shape}")
 
 def cosine_similarity(vec1, vec2):
-    dot_product = np.dot(vec1, vec2)
-    norm1 = np.linalg.norm(vec1)
-    norm2 = np.linalg.norm(vec2)
+    dot_product = numpy.dot(vec1, vec2)
+    norm1 = numpy.linalg.norm(vec1)
+    norm2 = numpy.linalg.norm(vec2)
 
     if norm1 == 0 or norm2 == 0:
         return 0.0
@@ -207,7 +207,7 @@ class ChunkedSemanticSearch(SemanticSearch):
         self.chunk_metadata = metadata
 
         with open('cache/chunk_embeddings.npy', 'wb') as f:
-            np.save(f, self.chunk_embeddings)
+            numpy.save(f, self.chunk_embeddings)
         with open('cache/chunk_metadata.json', 'w') as f:
             json.dump({"chunks": metadata, "total_chunks": len(chunks)}, f, indent=2)
 
@@ -221,7 +221,7 @@ class ChunkedSemanticSearch(SemanticSearch):
         if (os.path.exists('cache/chunk_embeddings.npy')
             and os.path.exists('cache/chunk_metadata.json')):
             with open('cache/chunk_embeddings.npy', 'rb') as f:
-                self.chunk_embeddings = np.load(f)
+                self.chunk_embeddings = numpy.load(f)
             with open('cache/chunk_metadata.json', 'r') as f:
                 self.chunk_metadata = json.load(f)['chunks']
             return self.chunk_embeddings

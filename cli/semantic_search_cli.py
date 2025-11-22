@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
 import argparse
-import lib.semantic_search as semantic
+
+import lib.semantic_search as semantic_search
 
 def main():
     parser = argparse.ArgumentParser(description="Semantic Search CLI")
@@ -31,31 +32,31 @@ def main():
     args = parser.parse_args()
     match args.command:
         case "verify":
-            semantic.verify_model()
+            semantic_search.verify_model()
 
         case "embed_text":
-            semantic.embed_text(args.text)
+            semantic_search.embed_text(args.text)
 
         case "verify_embeddings":
-            semantic.verify_embeddings()
+            semantic_search.verify_embeddings()
 
         case "embedquery":
-            semantic.embed_query_text(args.query)
+            semantic_search.embed_query_text(args.query)
 
         case "search":
-            semantic.search_command(args.query, args.limit)
+            semantic_search.search_command(args.query, args.limit)
 
         case "chunk":
-            semantic.chunk_command(args.text, args.chunk_size, args.overlap)
+            semantic_search.chunk_command(args.text, args.chunk_size, args.overlap)
 
         case "semantic_chunk":
-            semantic.semantic_chunk_command(args.text, args.max_chunk_size, args.overlap)
+            semantic_search.semantic_chunk_command(args.text, args.max_chunk_size, args.overlap)
 
         case "embed_chunks":
-            semantic.embed_chunks_command()
+            semantic_search.embed_chunks_command()
 
         case "search_chunked":
-            semantic.search_chunked_command(args.query, args.limit)
+            semantic_search.search_chunked_command(args.query, args.limit)
 
         case _:
             parser.print_help()

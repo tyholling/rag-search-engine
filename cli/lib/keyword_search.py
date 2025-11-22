@@ -1,10 +1,10 @@
-import os
+import collections
 import math
+import os
 import pickle
 import re
 import string
 
-from collections import Counter
 from nltk.stem import PorterStemmer
 
 BM25_K1 = 1.5
@@ -38,7 +38,7 @@ class InvertedIndex:
         self.doc_lengths[doc_id] = len(tokens)
 
         if doc_id not in self.term_frequencies:
-            self.term_frequencies[doc_id] = Counter()
+            self.term_frequencies[doc_id] = collections.Counter()
 
         for token in tokens:
             if token not in self.index:
