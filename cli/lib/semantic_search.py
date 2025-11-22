@@ -142,26 +142,27 @@ def chunk_command(query: str, chunk_size: int, overlap: int):
 
 def semantic_chunk_command(query: str, max_chunk_size: int, overlap: int):
     print(f"Semantically chunking {len(query)} characters")
-    lines = re.split(r"(?<=[.!?])\s+", query)
-    chunks = []
-    while lines:
-        if chunks and len(lines) <= overlap:
-            break
-        next = lines[:max_chunk_size]
-        lines = lines[max_chunk_size - overlap:]
-        chunks.append(" ".join(next))
+    chunks = semantic_chunks(query, max_chunk_size, overlap)
     for i, chunk in enumerate(chunks):
         print(f"{i+1}. {chunk}")
 
 def semantic_chunks(query: str, max_chunk_size: int, overlap: int):
+    query = query.strip()
+    if query == "":
+        return []
     lines = re.split(r"(?<=[.!?])\s+", query)
+    if len(lines) and not lines[0].endswith(('.', '!', '?')):
+        return list(lines[0])
+
     chunks: list[str] = []
     while lines:
         if chunks and len(lines) <= overlap:
             break
         next = lines[:max_chunk_size]
         lines = lines[max_chunk_size - overlap:]
-        chunks.append(" ".join(next))
+        next_line = " ".join(next).strip()
+        if next_line != "":
+            chunks.append(next_line)
     return chunks
 
 def embed_chunks_command():
