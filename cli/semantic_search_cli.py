@@ -12,6 +12,9 @@ def main():
     verify_embeddings_parser = subparsers.add_parser("verify_embeddings", help="verify embeddings")
     embedquery_parser = subparsers.add_parser("embedquery", help="embed query")
     embedquery_parser.add_argument("query", help="query")
+    search_parser = subparsers.add_parser("search", help="search")
+    search_parser.add_argument("query", help="query")
+    search_parser.add_argument("--limit", type=int, default=5, help="limit")
 
     args = parser.parse_args()
     match args.command:
@@ -26,6 +29,9 @@ def main():
 
         case "embedquery":
             lib.semantic_search.embed_query_text(args.query)
+
+        case "search":
+            lib.semantic_search.search_command(args.query, args.limit)
 
         case _:
             parser.print_help()
