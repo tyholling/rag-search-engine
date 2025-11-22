@@ -9,6 +9,7 @@ def main():
     verify_parser = subparsers.add_parser("verify", help="verify model")
     embed_text_parser = subparsers.add_parser("embed_text", help="embed text")
     embed_text_parser.add_argument("text", help="text")
+    verify_embeddings_parser = subparsers.add_parser("verify_embeddings", help="verify embeddings")
 
     args = parser.parse_args()
     match args.command:
@@ -17,6 +18,9 @@ def main():
 
         case "embed_text":
             lib.semantic_search.embed_text(args.text)
+
+        case "verify_embeddings":
+            lib.semantic_search.verify_embeddings()
 
         case _:
             parser.print_help()
